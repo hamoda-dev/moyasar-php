@@ -1,0 +1,21 @@
+{
+    "name": "hamoda-dev/moyasar-php",
+    "type": "library",
+    "license": "MIT",
+    "version": "dev-main",
+    "authors": [
+        {
+            "name": "Mohammed Hamoda",
+            "email": "hamoda.dev@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "HamodaDev\\Moyasar\\": "src/"
+        }
+    },
+    "require": {
+        "saloonphp/saloon": "^4.0",
+        "saloonphp/pagination-plugin": "^2.3"
+    }
+}
