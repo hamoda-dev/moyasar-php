@@ -43,10 +43,9 @@ MOYASAR_BASE_URL=https://api.moyasar.com/v1
 
 ### Creating an Invoice
 
-To create a new invoice, pass a `CreateInvoiceDTO` to the `CreateInvoiceRequest`:
+To create a new invoice, pass a `CreateInvoiceDTO` to the `create` method:
 
 ```php
-use HamodaDev\Moyasar\Invoice\APIs\CreateInvoiceRequest;
 use HamodaDev\Moyasar\Invoice\DTO\CreateInvoiceDTO;
 
 $dto = new CreateInvoiceDTO(
@@ -59,9 +58,7 @@ $dto = new CreateInvoiceDTO(
     metadata: ['order_id' => '1234'],
 );
 
-$response = $moyasar->send(new CreateInvoiceRequest($dto));
-
-$invoice = $response->dto();
+$invoice = $moyasar->invoice()->create($dto);
 echo $invoice->url; // The hosted invoice payment page
 ```
 
@@ -89,28 +86,19 @@ $dto = CreateInvoiceDTO::fromArray([
 
 ### Retrieving an Invoice
 
-To retrieve a single invoice by its ID, use the `GetInvoiceRequest`:
+To retrieve a single invoice by its ID, use the `get` method:
 
 ```php
-use HamodaDev\Moyasar\Invoice\APIs\GetInvoiceRequest;
-
-$response = $moyasar->send(new GetInvoiceRequest(
-    invoiceId: 'invoice_12345',
-));
-
-$invoice = $response->dto();
+$invoice = $moyasar->invoice()->get('invoice_12345');
 echo $invoice->status; // e.g. "paid", "pending", "expired"
 ```
 
 ### Listing Invoices
 
-To list all invoices with pagination, use the `ListInvoicesRequest`:
+To list all invoices with pagination, use the `list` method:
 
 ```php
-use HamodaDev\Moyasar\Invoice\APIs\ListInvoicesRequest;
-
-$request = new ListInvoicesRequest;
-$paginator = $request->paginate($moyasar);
+$paginator = $moyasar->invoice()->list()->paginate($moyasar);
 
 // Iterate through all pages
 while ($paginator->hasMorePages()) {
@@ -127,60 +115,49 @@ while ($paginator->hasMorePages()) {
 
 ### Updating an Invoice
 
-To update an invoice's metadata, use the `UpdateInvoiceRequest` with an `UpdateInvoiceDTO`:
+To update an invoice's metadata, use the `update` method with an `UpdateInvoiceDTO`:
 
 ```php
-use HamodaDev\Moyasar\Invoice\APIs\UpdateInvoiceRequest;
 use HamodaDev\Moyasar\Invoice\DTO\UpdateInvoiceDTO;
 
-$response = $moyasar->send(new UpdateInvoiceRequest(
+$invoice = $moyasar->invoice()->update(
     invoiceId: 'invoice_12345',
-    updateInvoiceDTO: new UpdateInvoiceDTO(
+    dto: new UpdateInvoiceDTO(
         metadata: ['order_id' => '1234', 'customer_note' => 'Rush delivery'],
     ),
-));
-
-$invoice = $response->dto();
+);
 ```
 
 ### Bulk Creating Invoices
 
-To create multiple invoices in a single request, pass an array of `CreateInvoiceDTO` instances to the `BulkCreateInvoicesRequest`:
+To create multiple invoices in a single request, pass an array of `CreateInvoiceDTO` instances to the `bulkCreate` method:
 
 ```php
-use HamodaDev\Moyasar\Invoice\APIs\BulkCreateInvoicesRequest;
 use HamodaDev\Moyasar\Invoice\DTO\CreateInvoiceDTO;
 
-$response = $moyasar->send(new BulkCreateInvoicesRequest(
+$result = $moyasar->invoice()->bulkCreate(
     invoices: [
         new CreateInvoiceDTO(amount: 1000, currency: 'SAR', description: 'Invoice A'),
         new CreateInvoiceDTO(amount: 2000, currency: 'SAR', description: 'Invoice B'),
     ],
-));
+);
 ```
 
 ### Canceling an Invoice
 
-To cancel an invoice, use the `CancelInvoiceRequest`:
+To cancel an invoice, use the `cancel` method:
 
 ```php
-use HamodaDev\Moyasar\Invoice\APIs\CancelInvoiceRequest;
-
-$response = $moyasar->send(new CancelInvoiceRequest(
-    invoiceId: 'invoice_12345',
-));
-
-$invoice = $response->dto();
+$invoice = $moyasar->invoice()->cancel('invoice_12345');
 echo $invoice->status; // "canceled"
 ```
 
 ## Response DTO
 
-All requests that return a single invoice resolve to an `InvoiceDTO`. You can access it via `$response->dto()`:
+All resource methods that return a single invoice resolve to an `InvoiceDTO`:
 
 ```php
-$response = $moyasar->send(new GetInvoiceRequest(invoiceId: 'invoice_12345'));
-$invoice = $response->dto();
+$invoice = $moyasar->invoice()->get('invoice_12345');
 ```
 
 ### InvoiceDTO Properties
@@ -207,7 +184,7 @@ $invoice = $response->dto();
 To access the underlying Saloon response, use the `getResponse()` method provided by the `HasResponse` trait:
 
 ```php
-$invoice = $response->dto();
+$invoice = $moyasar->invoice()->get('invoice_12345');
 $rawResponse = $invoice->getResponse();
 $statusCode = $rawResponse->status();
 ```
@@ -220,8 +197,7 @@ The package relies on Saloon's exception handling. You may catch exceptions to h
 use Saloon\Exceptions\Request\RequestException;
 
 try {
-    $response = $moyasar->send(new GetInvoiceRequest(invoiceId: 'invalid_id'));
-    $invoice = $response->dto();
+    $invoice = $moyasar->invoice()->get('invalid_id');
 } catch (RequestException $exception) {
     $statusCode = $exception->getResponse()->status();
     $body = $exception->getResponse()->body();
