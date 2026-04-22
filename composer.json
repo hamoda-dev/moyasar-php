@@ -2,7 +2,7 @@
     "name": "hamoda-dev/moyasar-php",
     "type": "library",
     "license": "MIT",
-    "version": "dev-main",
+    "description": "A simple, expressive PHP client for the Moyasar payment gateway.",
     "authors": [
         {
             "name": "Mohammed Hamoda",
