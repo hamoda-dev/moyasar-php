@@ -1,401 +1,426 @@
 # Moyasar PHP
-
-Moyasar PHP provides a type-safe PHP interface to the [Moyasar](https://moyasar.com) payment gateway, built on [Saloon](https://saloon.dev). It currently supports the full **Invoice API** and **Payments API**.
-
+ 
+A simple, expressive PHP client for the [Moyasar](https://moyasar.com) payment gateway.
+ 
+This package provides a clean interface for working with Moyasar's Invoices and Payments APIs in any PHP 8.2+ application. It's framework-agnostic and works great with Laravel, Symfony, or plain PHP.
+ 
 ## Requirements
-
-- PHP 8.2+
-- [Saloon](https://docs.saloon.dev) ^4.0
-- [Saloon Pagination Plugin](https://docs.saloon.dev/docs/the-pagination-plugin) ^2.3
-
+ 
+- PHP **8.2+**
+- [Saloon](https://docs.saloon.dev) `^4.0`
+- [Saloon Pagination Plugin](https://docs.saloon.dev/docs/the-pagination-plugin) `^2.3`
 ## Installation
-
-Install the package via Composer:
-
+ 
+Install via Composer:
+ 
 ```bash
 composer require hamoda-dev/moyasar-php
 ```
-
-## Configuration
-
-Instantiate the `Moyasar` connector with your API key and the desired base URL:
-
+ 
+That's it. No service providers to register, no config files to publish. The package is framework-agnostic — use it in Laravel, Symfony, Slim, or plain PHP.
+ 
+## Quick Start
+ 
+Grab your secret key from the [Moyasar dashboard](https://dashboard.moyasar.com), then:
+ 
 ```php
 use HamodaDev\Moyasar\Moyasar;
-
+use HamodaDev\Moyasar\Invoice\DTO\CreateInvoiceDTO;
+ 
 $moyasar = new Moyasar(
     baseUrl: 'https://api.moyasar.com/v1',
-    apiKey: config('services.moyasar.secret_key'),
+    apiKey:  getenv('MOYASAR_SECRET_KEY'),
 );
+ 
+// Create an invoice and send the customer to the hosted payment page
+$invoice = $moyasar->invoice()->create(new CreateInvoiceDTO(
+    amount:      2500,                 // 25.00 SAR — always in the smallest unit
+    currency:    'SAR',
+    description: 'Order #1234',
+    callbackUrl: 'https://example.com/webhooks/moyasar',
+));
+ 
+header("Location: {$invoice->url}");
 ```
-
-You may store your credentials in your environment file:
-
+ 
+Three lines to take a payment. No Guzzle, no array-shuffling, no JSON decoding.
+ 
+### Recommended Environment Setup
+ 
+Keep credentials out of your code:
+ 
 ```env
 MOYASAR_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxx
 MOYASAR_BASE_URL=https://api.moyasar.com/v1
 ```
-
+ 
 > [!WARNING]
-> Never commit your Moyasar API key to version control. Always use environment variables or a secrets manager.
-
-## Usage
-
-### Creating an Invoice
-
-To create a new invoice, pass a `CreateInvoiceDTO` to the `create` method:
-
+> **Never commit API keys to version control.** Use environment variables, a secrets manager, or your framework's config system. Treat your secret key like a password.
+ 
+> [!TIP]
+> Moyasar issues separate **test** (`sk_test_...`) and **live** (`sk_live_...`) keys. Use the test key in development and staging — you can run real payment flows against test cards without charging anyone.
+ 
+---
+ 
+## Invoices
+ 
+Invoices are the fastest way to accept a payment: you create one, send the customer to `invoice->url`, and Moyasar handles the entire checkout UI for you.
+ 
+### Create an Invoice
+ 
 ```php
 use HamodaDev\Moyasar\Invoice\DTO\CreateInvoiceDTO;
-
-$dto = new CreateInvoiceDTO(
-    amount: 2500,
-    currency: 'SAR',
+ 
+$invoice = $moyasar->invoice()->create(new CreateInvoiceDTO(
+    amount:      2500,
+    currency:    'SAR',
     description: 'Order #1234',
     callbackUrl: 'https://example.com/webhooks/moyasar',
-    successUrl: 'https://example.com/payment/success',
-    backUrl: 'https://example.com/payment/cancel',
-    metadata: ['order_id' => '1234'],
-);
-
-$invoice = $moyasar->invoice()->create($dto);
-echo $invoice->url; // The hosted invoice payment page
+    successUrl:  'https://example.com/payment/success',
+    backUrl:     'https://example.com/payment/cancel',
+    metadata:    ['order_id' => '1234'],
+));
+ 
+echo $invoice->url;     // Hosted payment page — redirect your user here
+echo $invoice->id;      // Store this alongside your order
+echo $invoice->status;  // "initiated" for a fresh invoice
 ```
-
-| Parameter | Type | Required | Description |
+ 
+| Parameter | Type | Required | What it's for |
 | --- | --- | --- | --- |
-| `amount` | `int` | Yes | Amount in the smallest currency unit (e.g. halalas for SAR) |
-| `currency` | `string` | Yes | Three-letter ISO currency code (e.g. `SAR`) |
-| `description` | `string` | Yes | A description of the invoice |
-| `callbackUrl` | `string\|null` | No | URL that Moyasar will call when the payment status changes |
-| `successUrl` | `string\|null` | No | URL to redirect the customer to after a successful payment |
-| `backUrl` | `string\|null` | No | URL to redirect the customer to if they cancel |
-| `expiredAt` | `string\|null` | No | ISO 8601 datetime after which the invoice expires |
-| `metadata` | `array\|null` | No | Key-value pairs attached to the invoice |
-
-You may also create a DTO from an array:
-
+| `amount` | `int` | Yes | Smallest currency unit (halalas for SAR, cents for USD) |
+| `currency` | `string` | Yes | ISO 4217 code (`SAR`, `USD`, ...) |
+| `description` | `string` | Yes | Shown to the customer on the payment page |
+| `callbackUrl` | `?string` | No | Webhook URL — Moyasar POSTs here when payment status changes |
+| `successUrl` | `?string` | No | Where to redirect after a successful payment |
+| `backUrl` | `?string` | No | Where to redirect if the customer cancels |
+| `expiredAt` | `?string` | No | ISO 8601 — invoice auto-expires after this |
+| `metadata` | `?array` | No | Arbitrary key-value data — perfect for your internal IDs |
+ 
+Prefer building DTOs from incoming request data? Use the array factory:
+ 
 ```php
-$dto = CreateInvoiceDTO::fromArray([
-    'amount' => 2500,
-    'currency' => 'SAR',
-    'description' => 'Order #1234',
-    'metadata' => ['order_id' => '1234'],
-]);
+$dto = CreateInvoiceDTO::fromArray($request->validated());
+$invoice = $moyasar->invoice()->create($dto);
 ```
-
-### Retrieving an Invoice
-
-To retrieve a single invoice by its ID, use the `get` method:
-
+ 
+### Retrieve an Invoice
+ 
 ```php
 $invoice = $moyasar->invoice()->get('invoice_12345');
-echo $invoice->status; // e.g. "paid", "pending", "expired"
+ 
+if ($invoice->status === 'paid') {
+    // Fulfill the order
+}
 ```
-
-### Listing Invoices
-
-To list all invoices with pagination, use the `list` method:
-
+ 
+### List Invoices (with Pagination)
+ 
+Moyasar returns invoices in pages. The SDK's paginator handles page-walking for you — no manual `?page=N` tracking:
+ 
 ```php
 $paginator = $moyasar->invoice()->list()->paginate($moyasar);
-
-// Iterate through all pages
+ 
 while ($paginator->hasMorePages()) {
     foreach ($paginator->items() as $invoice) {
-        echo $invoice->id . ' - ' . $invoice->status;
+        echo "{$invoice->id} — {$invoice->status}\n";
     }
-
+ 
     $paginator = $paginator->nextPage();
 }
 ```
-
+ 
 > [!TIP]
-> Each item yielded by `items()` is an `InvoiceDTO` instance, giving you type-safe access to all invoice properties.
-
-### Updating an Invoice
-
-To update an invoice's metadata, use the `update` method with an `UpdateInvoiceDTO`:
-
+> Every item yielded by `items()` is a fully-typed `InvoiceDTO`. Your IDE will autocomplete `->id`, `->status`, `->amount`, and every other field.
+ 
+### Update an Invoice
+ 
+Only `metadata` is updatable after creation — use this to attach internal context as your order progresses:
+ 
 ```php
 use HamodaDev\Moyasar\Invoice\DTO\UpdateInvoiceDTO;
-
-$invoice = $moyasar->invoice()->update(
-    invoiceId: 'invoice_12345',
-    dto: new UpdateInvoiceDTO(
-        metadata: ['order_id' => '1234', 'customer_note' => 'Rush delivery'],
-    ),
-);
-```
-
-### Bulk Creating Invoices
-
-To create multiple invoices in a single request, pass an array of `CreateInvoiceDTO` instances to the `bulkCreate` method:
-
-```php
-use HamodaDev\Moyasar\Invoice\DTO\CreateInvoiceDTO;
-
-$result = $moyasar->invoice()->bulkCreate(
-    invoices: [
-        new CreateInvoiceDTO(amount: 1000, currency: 'SAR', description: 'Invoice A'),
-        new CreateInvoiceDTO(amount: 2000, currency: 'SAR', description: 'Invoice B'),
+ 
+$moyasar->invoice()->update('invoice_12345', new UpdateInvoiceDTO(
+    metadata: [
+        'order_id'     => '1234',
+        'fulfilled_at' => now()->toIso8601String(),
     ],
-);
+));
 ```
-
-### Canceling an Invoice
-
-To cancel an invoice, use the `cancel` method:
-
+ 
+### Bulk-Create Invoices
+ 
+Need to send 50 invoices for a batch of orders? One request, one round-trip:
+ 
+```php
+$result = $moyasar->invoice()->bulkCreate([
+    new CreateInvoiceDTO(amount: 1000, currency: 'SAR', description: 'Invoice A'),
+    new CreateInvoiceDTO(amount: 2000, currency: 'SAR', description: 'Invoice B'),
+    new CreateInvoiceDTO(amount: 3500, currency: 'SAR', description: 'Invoice C'),
+]);
+```
+ 
+### Cancel an Invoice
+ 
 ```php
 $invoice = $moyasar->invoice()->cancel('invoice_12345');
-echo $invoice->status; // "canceled"
+// $invoice->status === 'canceled'
 ```
-
-## Response DTO
-
-All resource methods that return a single invoice resolve to an `InvoiceDTO`:
-
-```php
-$invoice = $moyasar->invoice()->get('invoice_12345');
-```
-
-### InvoiceDTO Properties
-
-| Property | Type | Description |
+ 
+### InvoiceDTO Reference
+ 
+| Property | Type | Notes |
 | --- | --- | --- |
-| `id` | `string` | Unique invoice identifier |
-| `status` | `string` | Current status (`init`, `pending`, `paid`, `expired`, `canceled`) |
-| `amount` | `int` | Amount in the smallest currency unit |
-| `currency` | `string` | Three-letter ISO currency code |
-| `description` | `string` | Invoice description |
-| `logoUrl` | `string` | Merchant logo URL |
-| `amountFormat` | `string` | Human-readable amount string |
-| `url` | `string` | Hosted invoice payment page URL |
-| `callbackUrl` | `string\|null` | Webhook callback URL |
-| `expiredAt` | `string\|null` | Expiration timestamp |
-| `createdAt` | `string` | Creation timestamp |
-| `updatedAt` | `string` | Last update timestamp |
-| `backUrl` | `string\|null` | Cancel redirect URL |
-| `successUrl` | `string\|null` | Success redirect URL |
-| `metadata` | `array` | Key-value metadata attached to the invoice |
-| `payments` | `array` | Associated payment records |
-
-To access the underlying Saloon response, use the `getResponse()` method provided by the `HasResponse` trait:
-
+| `id` | `string` | Unique identifier |
+| `status` | `string` | `initiated`, `pending`, `paid`, `expired`, `canceled` |
+| `amount` | `int` | Smallest currency unit |
+| `currency` | `string` | ISO 4217 |
+| `description` | `string` | |
+| `url` | `string` | **Hosted payment page — redirect customers here** |
+| `amountFormat` | `string` | e.g. `"25.00 SAR"` |
+| `logoUrl` | `string` | Your merchant logo |
+| `callbackUrl` | `?string` | |
+| `successUrl` | `?string` | |
+| `backUrl` | `?string` | |
+| `expiredAt` | `?string` | |
+| `createdAt` | `string` | |
+| `updatedAt` | `string` | |
+| `metadata` | `array` | |
+| `payments` | `array` | Payment attempts linked to this invoice |
+ 
+Need the raw Saloon response? It's always available:
+ 
 ```php
-$invoice = $moyasar->invoice()->get('invoice_12345');
-$rawResponse = $invoice->getResponse();
-$statusCode = $rawResponse->status();
+$invoice  = $moyasar->invoice()->get('invoice_12345');
+$response = $invoice->getResponse();
+ 
+$response->status();   // 200
+$response->headers();  // All response headers
+$response->body();     // Raw JSON string
 ```
-
+ 
+---
+ 
 ## Payments
-
-### Creating a Payment
-
-To create a new payment, build a `CreditCardSourceDTO` for the payment source and pass a `CreatePaymentDTO` to the `create` method:
-
+ 
+Invoices are great when you want Moyasar to host the checkout. **Payments** are for when you want full control — your own card form, your own UX, direct charges against a card or token.
+ 
+> [!NOTE]
+> If you're collecting card details directly, make sure your integration is PCI-compliant. For most merchants, **tokenization** (using a saved `token` source) is safer and simpler than passing raw card numbers.
+ 
+### Create a Payment
+ 
 ```php
 use HamodaDev\Moyasar\Payment\DTO\CreatePaymentDTO;
 use HamodaDev\Moyasar\Payment\DTO\Source\CreditCardSourceDTO;
-
-$source = new CreditCardSourceDTO(
-    name: 'Ahmed Ali',
-    number: '4111111111111111',
-    month: 12,
-    year: 2030,
-    cvc: 123,
-    threeDs: true,
-);
-
-$dto = new CreatePaymentDTO(
-    amount: 2500,
-    currency: 'SAR',
-    description: 'Order #1234',
-    source: $source,
-    callbackUrl: 'https://example.com/webhooks/moyasar',
-    metadata: ['order_id' => '1234'],
-);
-
-$payment = $moyasar->payment()->create($dto);
-echo $payment->id;
+ 
+$payment = $moyasar->payment()->create(new CreatePaymentDTO(
+    amount:      10000,               // 100.00 SAR
+    currency:    'SAR',
+    description: 'Kindle Paperwhite',
+    source: new CreditCardSourceDTO(
+        name:                'John Doe',
+        number:              '4111111111111111',
+        month:               12,
+        year:                2030,
+        cvc:                 123,
+        statementDescriptor: 'Century Store',
+        threeDs:             true,
+        manual:              false,
+        saveCard:            false,
+    ),
+    callbackUrl: 'https://example.com/checkout/return',
+    metadata:    ['cart_id' => 'cart_abc', 'customer_id' => '23432'],
+    givenId:     'a1168bd1-47a4-4b97-8a50-dd5caaccacf2',
+    applyCoupon: true,
+));
+ 
+echo $payment->status;  // "initiated", "paid", "authorized", ...
+echo $payment->id;      // Store this with your order
 ```
-
-For non-credit-card sources (Apple Pay, STC Pay, token-based), pass a raw array:
-
-```php
-$dto = new CreatePaymentDTO(
-    amount: 2500,
-    currency: 'SAR',
-    description: 'Order #1234',
-    source: ['type' => 'applepay', 'token' => '...'],
-);
-```
-
-#### CreditCardSourceDTO Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | Yes | Cardholder name |
-| `number` | `string` | Yes | Card number |
-| `month` | `int` | Yes | Expiry month |
-| `year` | `int` | Yes | Expiry year |
-| `cvc` | `int` | Yes | Card verification code |
-| `type` | `string` | No | Source type, defaults to `'creditcard'` |
-| `statementDescriptor` | `string\|null` | No | Statement descriptor |
-| `threeDs` | `bool\|null` | No | Enable 3D Secure |
-| `manual` | `bool\|null` | No | Manual capture mode |
-| `saveCard` | `bool\|null` | No | Save card for future use |
-| `token` | `string\|null` | No | Token for saved-card flows |
-
-#### CreatePaymentDTO Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `amount` | `int` | Yes | Amount in the smallest currency unit (e.g. halalas for SAR) |
-| `currency` | `string` | Yes | Three-letter ISO currency code (e.g. `SAR`) |
-| `description` | `string` | Yes | A description of the payment |
-| `source` | `CreditCardSourceDTO\|array` | Yes | Payment source |
-| `givenId` | `string\|null` | No | Client-supplied idempotency ID |
-| `callbackUrl` | `string\|null` | No | Webhook callback URL |
-| `metadata` | `array\|null` | No | Key-value pairs attached to the payment |
-| `applyCoupon` | `bool\|null` | No | Whether to apply available coupons |
-
-### Retrieving a Payment
-
-To retrieve a single payment by its ID, use the `get` method:
-
+ 
+**About 3D Secure:** when `threeDs: true`, the response may include a redirect URL the customer must visit to complete verification. Always check `$payment->status` and any redirect instructions returned by the API before assuming the payment succeeded.
+ 
+**About manual capture:** setting `manual: true` authorizes the charge without capturing funds. Use this when you want to verify a payment now but only capture later (e.g. when you ship the item). See [Capture](#capture-an-authorized-payment) below.
+ 
+#### Supported Source Types
+ 
+| Source | DTO | Use case |
+| --- | --- | --- |
+| Credit/debit card | `CreditCardSourceDTO` | Direct card charge |
+| Apple Pay | Pass a raw `array` as `source` | Apple Pay token from the browser/app |
+| STC Pay | Pass a raw `array` as `source` | STC Pay flow |
+| Saved token | `CreditCardSourceDTO` with `token` set | Charging a previously saved card |
+ 
+### Fetch a Payment
+ 
 ```php
 $payment = $moyasar->payment()->get('payment_12345');
-echo $payment->status; // e.g. "paid", "initiated", "failed"
+ 
+if ($payment->status === 'paid') {
+    // Mark the order as paid
+}
 ```
-
-### Listing Payments
-
-To list all payments with pagination, use the `list` method:
-
+ 
+### List Payments
+ 
+Same paginator API as invoices:
+ 
 ```php
 $paginator = $moyasar->payment()->list()->paginate($moyasar);
-
+ 
 while ($paginator->hasMorePages()) {
     foreach ($paginator->items() as $payment) {
-        echo $payment->id . ' - ' . $payment->status;
+        echo "{$payment->id} — {$payment->status} — {$payment->amountFormat}\n";
     }
-
+ 
     $paginator = $paginator->nextPage();
 }
 ```
-
-### Updating a Payment
-
-To update a payment's description or metadata, use the `update` method with an `UpdatePaymentDTO`:
-
+ 
+### Update a Payment
+ 
+Update `description` or `metadata` after the fact — handy for enriching records once your internal workflow catches up:
+ 
 ```php
 use HamodaDev\Moyasar\Payment\DTO\UpdatePaymentDTO;
-
-$payment = $moyasar->payment()->update(
-    paymentId: 'payment_12345',
-    dto: new UpdatePaymentDTO(
-        description: 'Updated description',
-        metadata: ['order_id' => '1234', 'note' => 'Priority'],
-    ),
-);
+ 
+$moyasar->payment()->update('payment_12345', new UpdatePaymentDTO(
+    description: 'Kindle Paperwhite — refurbished',
+    metadata: [
+        'cart_id'        => 'cart_abc',
+        'customer_email' => 'john@example.com',
+    ],
+));
 ```
-
-### Refunding a Payment
-
-To refund a payment, use the `refund` method. Pass an amount for a partial refund, or omit it for a full refund:
-
+ 
+### Refund a Payment
+ 
+Full refund:
+ 
 ```php
-// Full refund
 $payment = $moyasar->payment()->refund('payment_12345');
-
-// Partial refund (500 halalas)
-$payment = $moyasar->payment()->refund('payment_12345', amount: 500);
 ```
-
-### Capturing an Authorized Payment
-
-To capture a previously authorized payment, use the `capture` method. Pass an amount for a partial capture, or omit it for a full capture:
-
+ 
+Partial refund (amount in smallest currency unit):
+ 
+```php
+$payment = $moyasar->payment()->refund('payment_12345', amount: 2500);  // Refund 25.00 SAR
+```
+ 
+### Capture an Authorized Payment
+ 
+If you created the payment with `manual: true`, capture it when you're ready to actually charge the customer:
+ 
 ```php
 // Full capture
 $payment = $moyasar->payment()->capture('payment_12345');
-
-// Partial capture (1000 halalas)
-$payment = $moyasar->payment()->capture('payment_12345', amount: 1000);
+ 
+// Partial capture (e.g. only ship part of an order)
+$payment = $moyasar->payment()->capture('payment_12345', amount: 5000);
 ```
-
-### Voiding a Payment
-
-To void a previously authorized payment, use the `void` method:
-
+ 
+### Void a Payment
+ 
+Cancel a payment **before** the funds settle in your bank account. Works on `paid`, `authorized`, or `captured` payments — as long as settlement hasn't happened yet.
+ 
 ```php
 $payment = $moyasar->payment()->void('payment_12345');
-echo $payment->status; // "voided"
+// $payment->status === 'voided'
 ```
-
+ 
+> [!TIP]
+> **Void vs. refund:** void *prevents* the money from leaving the customer's account; refund *returns* money that's already moved. Void is cheaper and faster — always prefer it when available.
+ 
 ### Payment Status Reference
-
-| Status | Description |
+ 
+| Status | What it means |
 | --- | --- |
-| `initiated` | Payment has been created but not yet processed |
-| `paid` | Payment was successful |
-| `failed` | Payment has failed |
-| `authorized` | Payment is authorized but not yet captured |
-| `captured` | Authorized payment has been captured |
-| `refunded` | Payment has been refunded |
-| `voided` | Authorized payment has been voided |
-| `verified` | Payment has been verified |
-
-### PaymentDTO Properties
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `id` | `string` | Unique payment identifier |
-| `status` | `string` | Current payment status |
-| `amount` | `int` | Amount in the smallest currency unit |
-| `fee` | `int` | Transaction fee |
-| `currency` | `string` | Three-letter ISO currency code |
-| `refunded` | `int` | Amount refunded so far |
-| `refundedAt` | `string\|null` | Timestamp of refund |
-| `captured` | `int` | Amount captured |
-| `capturedAt` | `string\|null` | Timestamp of capture |
-| `voidedAt` | `string\|null` | Timestamp of void |
-| `description` | `string` | Payment description |
-| `amountFormat` | `string` | Human-readable amount string |
-| `feeFormat` | `string` | Human-readable fee string |
-| `refundedFormat` | `string` | Human-readable refunded amount string |
-| `capturedFormat` | `string` | Human-readable captured amount string |
-| `invoiceId` | `string\|null` | Linked invoice ID (if any) |
-| `ip` | `string\|null` | IP address of the payer |
-| `callbackUrl` | `string\|null` | Webhook callback URL |
-| `createdAt` | `string` | Creation timestamp |
-| `updatedAt` | `string` | Last update timestamp |
-| `metadata` | `array` | Key-value metadata |
-| `source` | `array` | Raw source object (shape varies by payment method) |
-| `givenId` | `string\|null` | Client-supplied ID |
-
+| `initiated` | Payment created, customer hasn't paid yet |
+| `paid` | Payment succeeded — you can fulfill the order |
+| `failed` | Payment failed — check `message` on the DTO for the reason |
+| `authorized` | Card authorized but not charged — needs `capture()` |
+| `captured` | Authorized payment has been successfully captured |
+| `refunded` | Payment refunded (full or partial) |
+| `voided` | Payment canceled before settlement |
+| `verified` | Card verified during tokenization (no charge made) |
+ 
+---
+ 
 ## Error Handling
-
-The package relies on Saloon's exception handling. You may catch exceptions to handle API errors gracefully:
-
+ 
+Saloon throws `RequestException` on any non-2xx response. The response object is attached, so you get full context:
+ 
 ```php
 use Saloon\Exceptions\Request\RequestException;
-
+use Saloon\Exceptions\Request\FatalRequestException;
+ 
 try {
-    $invoice = $moyasar->invoice()->get('invalid_id');
-} catch (RequestException $exception) {
-    $statusCode = $exception->getResponse()->status();
-    $body = $exception->getResponse()->body();
-
-    // Handle the error (4xx client errors, 5xx server errors)
+    $payment = $moyasar->payment()->get('invalid_id');
+} catch (RequestException $e) {
+    $status = $e->getResponse()->status();
+    $body   = $e->getResponse()->json();
+ 
+    // Moyasar returns structured errors
+    $type    = $body['type']    ?? null;  // e.g. "invalid_request_error"
+    $message = $body['message'] ?? null;  // Human-readable summary
+    $errors  = $body['errors']  ?? [];    // Field-level validation errors
+ 
+    report($e);
+} catch (FatalRequestException $e) {
+    // Network failure — didn't even reach Moyasar
+    report($e);
 }
 ```
-
-> [!NOTE]
-> Saloon throws `RequestException` for all HTTP errors. You may catch `FourRequestException` for client errors (4xx) and `FiveRequestException` for server errors (5xx) separately if you need to handle them differently.
-
+ 
+### Moyasar Error Types
+ 
+| Type | Meaning | What to do |
+| --- | --- | --- |
+| `invalid_request_error` | You sent bad parameters | Check the `errors` field, fix, retry |
+| `authentication_error` | Invalid API key | Verify your secret key and base URL |
+| `rate_limit_error` | Too many requests | Back off and retry with exponential delay |
+| `api_connection_error` | Couldn't reach Moyasar | Retry with backoff |
+| `account_inactive_error` | Account not activated for live payments | Contact Moyasar sales |
+| `3ds_auth_error` | 3D Secure failed | Ask the customer to try again |
+| `api_error` | Something else went wrong | Retry; contact support if it persists |
+ 
+### HTTP Status Codes
+ 
+| Code | Meaning |
+| --- | --- |
+| `200` | Success |
+| `400` | Bad request — missing or invalid parameters |
+| `401` | Unauthorized — API key invalid |
+| `403` | Forbidden — credentials lack permission |
+| `404` | Resource not found |
+| `405` | Method not allowed — account not activated for live |
+| `429` | Rate limited |
+| `500` / `503` | Moyasar server issue — retry later |
+ 
+> [!WARNING]
+> Moyasar occasionally returns **`201` with a failure payload** (e.g. bank declines). Don't trust the status code alone — always inspect `$payment->status` or `$invoice->status` on the DTO.
+ 
+---
+ 
+## Testing Your Integration
+ 
+Use Moyasar's [test cards](https://docs.moyasar.com/testing) with your `sk_test_...` key. A few quick patterns:
+ 
+| Scenario | Card number |
+| --- | --- |
+| Successful charge | `4111 1111 1111 1111` |
+| Declined charge | `4000 0000 0000 0002` |
+| 3D Secure required | `4000 0000 0000 3220` |
+ 
+Always verify your webhook handler works end-to-end in `test` mode before flipping to live.
+ 
+---
+ 
+## Contributing
+ 
+Bug reports and pull requests welcome. If you're adding a new Moyasar endpoint, please follow the existing Resource / Request / DTO pattern — consistency is why this SDK is pleasant to use.
+ 
 ## License
-
+ 
 Moyasar PHP is open-sourced software licensed under the [MIT license](LICENSE).
