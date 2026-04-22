@@ -17,5 +17,7 @@
     "require": {
         "saloonphp/saloon": "^4.0",
         "saloonphp/pagination-plugin": "^2.3"
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
