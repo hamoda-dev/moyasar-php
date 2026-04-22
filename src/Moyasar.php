@@ -3,6 +3,7 @@
 namespace HamodaDev\Moyasar;
 
 use HamodaDev\Moyasar\Invoice\InvoiceResource;
+use HamodaDev\Moyasar\Payment\PaymentResource;
 use Saloon\Http\Auth\BasicAuthenticator;
 use Saloon\Http\Connector;
 
@@ -34,5 +35,10 @@ class Moyasar extends Connector
     public function invoice(): InvoiceResource
     {
         return new InvoiceResource($this);
+    }
+
+    public function payment(): PaymentResource
+    {
+        return new PaymentResource($this);
     }
 }

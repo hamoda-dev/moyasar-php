@@ -1,6 +1,6 @@
 # Moyasar PHP
 
-Moyasar PHP provides a type-safe PHP interface to the [Moyasar](https://moyasar.com) payment gateway, built on [Saloon](https://saloon.dev). It currently supports the full **Invoice API**.
+Moyasar PHP provides a type-safe PHP interface to the [Moyasar](https://moyasar.com) payment gateway, built on [Saloon](https://saloon.dev). It currently supports the full **Invoice API** and **Payments API**.
 
 ## Requirements
 
@@ -188,6 +188,193 @@ $invoice = $moyasar->invoice()->get('invoice_12345');
 $rawResponse = $invoice->getResponse();
 $statusCode = $rawResponse->status();
 ```
+
+## Payments
+
+### Creating a Payment
+
+To create a new payment, build a `CreditCardSourceDTO` for the payment source and pass a `CreatePaymentDTO` to the `create` method:
+
+```php
+use HamodaDev\Moyasar\Payment\DTO\CreatePaymentDTO;
+use HamodaDev\Moyasar\Payment\DTO\Source\CreditCardSourceDTO;
+
+$source = new CreditCardSourceDTO(
+    name: 'Ahmed Ali',
+    number: '4111111111111111',
+    month: 12,
+    year: 2030,
+    cvc: 123,
+    threeDs: true,
+);
+
+$dto = new CreatePaymentDTO(
+    amount: 2500,
+    currency: 'SAR',
+    description: 'Order #1234',
+    source: $source,
+    callbackUrl: 'https://example.com/webhooks/moyasar',
+    metadata: ['order_id' => '1234'],
+);
+
+$payment = $moyasar->payment()->create($dto);
+echo $payment->id;
+```
+
+For non-credit-card sources (Apple Pay, STC Pay, token-based), pass a raw array:
+
+```php
+$dto = new CreatePaymentDTO(
+    amount: 2500,
+    currency: 'SAR',
+    description: 'Order #1234',
+    source: ['type' => 'applepay', 'token' => '...'],
+);
+```
+
+#### CreditCardSourceDTO Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | Yes | Cardholder name |
+| `number` | `string` | Yes | Card number |
+| `month` | `int` | Yes | Expiry month |
+| `year` | `int` | Yes | Expiry year |
+| `cvc` | `int` | Yes | Card verification code |
+| `type` | `string` | No | Source type, defaults to `'creditcard'` |
+| `statementDescriptor` | `string\|null` | No | Statement descriptor |
+| `threeDs` | `bool\|null` | No | Enable 3D Secure |
+| `manual` | `bool\|null` | No | Manual capture mode |
+| `saveCard` | `bool\|null` | No | Save card for future use |
+| `token` | `string\|null` | No | Token for saved-card flows |
+
+#### CreatePaymentDTO Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `amount` | `int` | Yes | Amount in the smallest currency unit (e.g. halalas for SAR) |
+| `currency` | `string` | Yes | Three-letter ISO currency code (e.g. `SAR`) |
+| `description` | `string` | Yes | A description of the payment |
+| `source` | `CreditCardSourceDTO\|array` | Yes | Payment source |
+| `givenId` | `string\|null` | No | Client-supplied idempotency ID |
+| `callbackUrl` | `string\|null` | No | Webhook callback URL |
+| `metadata` | `array\|null` | No | Key-value pairs attached to the payment |
+| `applyCoupon` | `bool\|null` | No | Whether to apply available coupons |
+
+### Retrieving a Payment
+
+To retrieve a single payment by its ID, use the `get` method:
+
+```php
+$payment = $moyasar->payment()->get('payment_12345');
+echo $payment->status; // e.g. "paid", "initiated", "failed"
+```
+
+### Listing Payments
+
+To list all payments with pagination, use the `list` method:
+
+```php
+$paginator = $moyasar->payment()->list()->paginate($moyasar);
+
+while ($paginator->hasMorePages()) {
+    foreach ($paginator->items() as $payment) {
+        echo $payment->id . ' - ' . $payment->status;
+    }
+
+    $paginator = $paginator->nextPage();
+}
+```
+
+### Updating a Payment
+
+To update a payment's description or metadata, use the `update` method with an `UpdatePaymentDTO`:
+
+```php
+use HamodaDev\Moyasar\Payment\DTO\UpdatePaymentDTO;
+
+$payment = $moyasar->payment()->update(
+    paymentId: 'payment_12345',
+    dto: new UpdatePaymentDTO(
+        description: 'Updated description',
+        metadata: ['order_id' => '1234', 'note' => 'Priority'],
+    ),
+);
+```
+
+### Refunding a Payment
+
+To refund a payment, use the `refund` method. Pass an amount for a partial refund, or omit it for a full refund:
+
+```php
+// Full refund
+$payment = $moyasar->payment()->refund('payment_12345');
+
+// Partial refund (500 halalas)
+$payment = $moyasar->payment()->refund('payment_12345', amount: 500);
+```
+
+### Capturing an Authorized Payment
+
+To capture a previously authorized payment, use the `capture` method. Pass an amount for a partial capture, or omit it for a full capture:
+
+```php
+// Full capture
+$payment = $moyasar->payment()->capture('payment_12345');
+
+// Partial capture (1000 halalas)
+$payment = $moyasar->payment()->capture('payment_12345', amount: 1000);
+```
+
+### Voiding a Payment
+
+To void a previously authorized payment, use the `void` method:
+
+```php
+$payment = $moyasar->payment()->void('payment_12345');
+echo $payment->status; // "voided"
+```
+
+### Payment Status Reference
+
+| Status | Description |
+| --- | --- |
+| `initiated` | Payment has been created but not yet processed |
+| `paid` | Payment was successful |
+| `failed` | Payment has failed |
+| `authorized` | Payment is authorized but not yet captured |
+| `captured` | Authorized payment has been captured |
+| `refunded` | Payment has been refunded |
+| `voided` | Authorized payment has been voided |
+| `verified` | Payment has been verified |
+
+### PaymentDTO Properties
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `id` | `string` | Unique payment identifier |
+| `status` | `string` | Current payment status |
+| `amount` | `int` | Amount in the smallest currency unit |
+| `fee` | `int` | Transaction fee |
+| `currency` | `string` | Three-letter ISO currency code |
+| `refunded` | `int` | Amount refunded so far |
+| `refundedAt` | `string\|null` | Timestamp of refund |
+| `captured` | `int` | Amount captured |
+| `capturedAt` | `string\|null` | Timestamp of capture |
+| `voidedAt` | `string\|null` | Timestamp of void |
+| `description` | `string` | Payment description |
+| `amountFormat` | `string` | Human-readable amount string |
+| `feeFormat` | `string` | Human-readable fee string |
+| `refundedFormat` | `string` | Human-readable refunded amount string |
+| `capturedFormat` | `string` | Human-readable captured amount string |
+| `invoiceId` | `string\|null` | Linked invoice ID (if any) |
+| `ip` | `string\|null` | IP address of the payer |
+| `callbackUrl` | `string\|null` | Webhook callback URL |
+| `createdAt` | `string` | Creation timestamp |
+| `updatedAt` | `string` | Last update timestamp |
+| `metadata` | `array` | Key-value metadata |
+| `source` | `array` | Raw source object (shape varies by payment method) |
+| `givenId` | `string\|null` | Client-supplied ID |
 
 ## Error Handling
 
