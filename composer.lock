@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "801caaff25cd81fbbc48ca13cc9e6dcd",
+    "content-hash": "86311997de6a3d07e929de07ccdcaeee",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -535,6 +535,59 @@
                 "source": "https://github.com/ralouphie/getallheaders/tree/develop"
             },
             "time": "2019-03-08T08:55:37+00:00"
+        },
+        {
+            "name": "saloonphp/pagination-plugin",
+            "version": "v2.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/saloonphp/pagination-plugin.git",
+                "reference": "a61822ca93c1207008941822b00df1d8740a4096"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/saloonphp/pagination-plugin/zipball/a61822ca93c1207008941822b00df1d8740a4096",
+                "reference": "a61822ca93c1207008941822b00df1d8740a4096",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.2",
+                "saloonphp/saloon": "^3.0 || ^4.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.5",
+                "illuminate/collections": "^11.0 || ^12.0",
+                "pestphp/pest": "^3.0 || ^4.0",
+                "phpstan/phpstan": "^1.9",
+                "spatie/invade": "^2.0"
+            },
+            "suggest": {
+                "illuminate/collections": "Used to provide LazyCollections via the collect() method on paginators."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Saloon\\PaginationPlugin\\": "src/",
+                    "Saloon\\PaginationPlugin\\Tests\\": "tests/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Sam Carré",
+                    "email": "29132017+Sammyjo20@users.noreply.github.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Official Pagination Plugin For Saloon v3",
+            "homepage": "https://github.com/saloonphp/pagination-plugin",
+            "support": {
+                "source": "https://github.com/saloonphp/pagination-plugin/tree/v2.3.0"
+            },
+            "time": "2026-03-25T20:40:25+00:00"
         },
         {
             "name": "saloonphp/saloon",
