@@ -34,38 +34,38 @@ This pull request adds unit and integration tests and fixes small bugs
 
 2. When viewing paginated invoices, we got a response like this
 
-```php
-[
-    'invoices' => [
-        [
-            'id' => '659f9c29-5fd5-325b-b9df-bac86090d04e',
-            'status' => 'initiated',
-            'amount' => 1000,
-            'currency' => 'USD',
-            'description' => 'Order #1234',
-            'amount_format' => '10.00 USD',
-            'url' => 'https://checkout.moyasar.com/invoices/659f9c29-5fd5-325b-b9df-bac86090d04e?lang=en',
-            'callback_url' => 'https://example.com/webhooks/moyasar',
-            'expired_at' => null,
-            'created_at' => '2026-04-30T17:22:57.186Z',
-            'updated_at' => '2026-04-30T17:22:57.186Z',
-            'back_url' => null,
-            'success_url' => null,
-            'payment_id' => null,
-            'paid_at' => null,
-            'metadata' => null,
+    ```php
+    [
+        'invoices' => [
+            [
+                'id' => '659f9c29-5fd5-325b-b9df-bac86090d04e',
+                'status' => 'initiated',
+                'amount' => 1000,
+                'currency' => 'USD',
+                'description' => 'Order #1234',
+                'amount_format' => '10.00 USD',
+                'url' => 'https://checkout.moyasar.com/invoices/659f9c29-5fd5-325b-b9df-bac86090d04e?lang=en',
+                'callback_url' => 'https://example.com/webhooks/moyasar',
+                'expired_at' => null,
+                'created_at' => '2026-04-30T17:22:57.186Z',
+                'updated_at' => '2026-04-30T17:22:57.186Z',
+                'back_url' => null,
+                'success_url' => null,
+                'payment_id' => null,
+                'paid_at' => null,
+                'metadata' => null,
+            ],
+            // ... rest of invoices
         ],
-        // ... rest of invoices
-    ],
-    'meta' => [
-        'current_page' => 2,
-        'next_page' =>,
-        'prev_page' => 1,
-        'total_pages' => 2,
-        'total_count' => 44,
+        'meta' => [
+            'current_page' => 2,
+            'next_page' =>,
+            'prev_page' => 1,
+            'total_pages' => 2,
+            'total_count' => 44,
+        ]
     ]
-]
-```
+    ```
 
 Which causes issues with the current InvoiceDTO, because logoUrl is null. So, I \[temporarly\] marked `$logoUrl` to be nullable
 
