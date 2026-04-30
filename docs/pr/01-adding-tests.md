@@ -3,7 +3,7 @@
 This pull request adds unit and integration tests and fixes small bugs
 
 - [ ] Breaking Change ❌
-- New version: 0.0.2
+- [x] **New version: v0.0.2**
 
 ## Files & Directories Added
 
