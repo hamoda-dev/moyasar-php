@@ -72,3 +72,7 @@ Which causes issues with the current InvoiceDTO, because logoUrl is null. So, I 
 ## Tests
 
 - I \[Abdurrahman\] have created unverified, throwaway dummy account in Moyaser platform only for testing. I preferred this approach over mocking, and it's safe anyway since the credentials are not anywhere but on a local machine (temporary email and a password), feel free to fill your test credentials in phpunit.xml
+
+## Next Steps
+
+- Adding Payment Integration Tests: I intentionally added only invoice tests in this PR so that the cognitive load is easy to understand
