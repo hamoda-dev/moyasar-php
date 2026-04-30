@@ -22,7 +22,7 @@ class InvoiceResource extends BaseResource
 
     public function list(): ListInvoicesRequest
     {
-        return new ListInvoicesRequest;
+        return new ListInvoicesRequest();
     }
 
     public function create(CreateInvoiceDTO $dto): InvoiceDTO
@@ -40,7 +40,11 @@ class InvoiceResource extends BaseResource
         return $this->connector->send(new CancelInvoiceRequest($invoiceId))->dto();
     }
 
-    public function bulkCreate(array $invoices): mixed
+    /**
+     * @param CreateInvoiceDTO[] $invoices
+     * @return array{invoices: InvoiceDTO[]}
+     */
+    public function bulkCreate(array $invoices): array
     {
         return $this->connector->send(new BulkCreateInvoicesRequest($invoices))->dto();
     }

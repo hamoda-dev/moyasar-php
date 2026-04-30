@@ -5,13 +5,14 @@ namespace HamodaDev\Moyasar\Invoice\DTO;
 use Saloon\Http\Response;
 use Saloon\Traits\Responses\HasResponse;
 
-final readonly class InvoiceDTO
+final class InvoiceDTO
 {
     use HasResponse;
 
     /**
-     * @param  array<string, mixed>  $metadata
-     * @param  array<string, mixed>  $payments
+     * @param array<string, mixed> $metadata
+     * @param array<string, mixed> $payments
+     * Note: $logoUrl is not a part of the ListInvoice response, so, it's made nullable
      */
     public function __construct(
         public string $id,
@@ -19,7 +20,7 @@ final readonly class InvoiceDTO
         public int $amount,
         public string $currency,
         public string $description,
-        public string $logoUrl,
+        public ?string $logoUrl,
         public string $amountFormat,
         public string $url,
         public ?string $callbackUrl = null,
@@ -30,7 +31,8 @@ final readonly class InvoiceDTO
         public ?string $successUrl = null,
         public array $metadata = [],
         public array $payments = [],
-    ) {}
+    ) {
+    }
 
     public static function fromResponse(Response $response): self
     {
@@ -48,7 +50,7 @@ final readonly class InvoiceDTO
             amount: (int) $data['amount'],
             currency: $data['currency'],
             description: $data['description'],
-            logoUrl: $data['logo_url'],
+            logoUrl: $data['logo_url'] ?? null,
             amountFormat: $data['amount_format'],
             url: $data['url'],
             callbackUrl: $data['callback_url'] ?? null,
