@@ -3,9 +3,11 @@
 namespace HamodaDev\Moyasar\Invoice\APIs;
 
 use HamodaDev\Moyasar\Invoice\DTO\CreateInvoiceDTO;
+use HamodaDev\Moyasar\Invoice\DTO\InvoiceDTO;
 use Saloon\Contracts\Body\HasBody;
 use Saloon\Enums\Method;
 use Saloon\Http\Request;
+use Saloon\Http\Response;
 use Saloon\Traits\Body\HasJsonBody;
 
 class BulkCreateInvoicesRequest extends Request implements HasBody
@@ -19,7 +21,8 @@ class BulkCreateInvoicesRequest extends Request implements HasBody
      */
     public function __construct(
         public readonly array $invoices,
-    ) {}
+    ) {
+    }
 
     public function resolveEndpoint(): string
     {
@@ -30,7 +33,7 @@ class BulkCreateInvoicesRequest extends Request implements HasBody
     {
         return [
             'invoices' => array_map(
-                fn (CreateInvoiceDTO $dto): array => array_filter([
+                fn(CreateInvoiceDTO $dto): array => array_filter([
                     'amount' => $dto->amount,
                     'currency' => $dto->currency,
                     'description' => $dto->description,
@@ -39,9 +42,23 @@ class BulkCreateInvoicesRequest extends Request implements HasBody
                     'back_url' => $dto->backUrl,
                     'expired_at' => $dto->expiredAt,
                     'metadata' => $dto->metadata,
-                ], fn (mixed $value): bool => $value !== null),
+                ], fn(mixed $value): bool => $value !== null),
                 $this->invoices,
             ),
         ];
+    }
+
+    /**
+     * @param Response $response
+     * @return array{invoices: InvoiceDTO[]}
+     */
+    public function createDtoFromResponse(Response $response): array
+    {
+        $data = [];
+        $data['invoices'] = array_map(
+            fn(array $invoice): InvoiceDTO => InvoiceDTO::fromArray($invoice),
+            $response->json('invoices', [])
+        );
+        return $data;
     }
 }

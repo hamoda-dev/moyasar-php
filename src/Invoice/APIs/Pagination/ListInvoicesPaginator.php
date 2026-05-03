@@ -19,7 +19,7 @@ final class ListInvoicesPaginator extends PagedPaginator
         $invoices = $response->json('invoices', []);
 
         return array_map(
-            fn (array $invoice): InvoiceDTO => InvoiceDTO::fromArray($invoice),
+            fn(array $invoice): InvoiceDTO => InvoiceDTO::fromArray($invoice),
             $invoices,
         );
     }

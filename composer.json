@@ -7,11 +7,16 @@
         {
             "name": "Mohammed Hamoda",
             "email": "hamoda.dev@gmail.com"
+        },
+        {
+            "name": "Abdurrahman Tantawi",
+            "email": "abdurrahman.tantawi@gmail.com"
         }
     ],
     "autoload": {
         "psr-4": {
-            "HamodaDev\\Moyasar\\": "src/"
+            "HamodaDev\\Moyasar\\": "src/",
+            "Tests\\": "tests/"
         }
     },
     "require": {
@@ -19,5 +24,16 @@
         "saloonphp/pagination-plugin": "^2.3"
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "config": {
+        "platform": {
+            "php": "8.2.0"
+        },
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "require-dev": {
+        "pestphp/pest": "^3"
+    }
 }

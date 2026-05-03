@@ -1,1 +1,5 @@
 /vendor
+.vscode/
+phpunit.xml
+.env
+docs/pr/
