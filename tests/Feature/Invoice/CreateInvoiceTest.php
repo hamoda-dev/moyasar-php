@@ -2,17 +2,14 @@
 
 use HamodaDev\Moyasar\Invoice\DTO\CreateInvoiceDTO;
 use HamodaDev\Moyasar\Invoice\DTO\InvoiceDTO;
-use HamodaDev\Moyasar\Moyasar;
+use Tests\Config\MoyasarInitializer;
 
 // don't use callable syntax since it won't apply to this file and no validation will happen
 beforeAll(fn() => validateEnvIsSet());
 
 it('Creates an invoice and send the customer to the hosted payment page', function () {
     // arrange
-    $moyasar = new Moyasar(
-        baseUrl: getenv('MOYASAR_BASE_URL'),
-        apiKey: getenv('MOYASAR_SECRET_KEY'),
-    );
+    $moyasar = MoyasarInitializer::getInstance()->getMoyasar();
 
     // act
     $invoice = $moyasar->invoice()->create(new CreateInvoiceDTO(
@@ -33,10 +30,7 @@ it('Creates an invoice and send the customer to the hosted payment page', functi
 
 it('Bulk creates invoices', function () {
     // arrange
-    $moyasar = new Moyasar(
-        baseUrl: getenv('MOYASAR_BASE_URL'),
-        apiKey: getenv('MOYASAR_SECRET_KEY'),
-    );
+    $moyasar = MoyasarInitializer::getInstance()->getMoyasar();
 
     // act
     $invoices = $moyasar->invoice()->bulkCreate([

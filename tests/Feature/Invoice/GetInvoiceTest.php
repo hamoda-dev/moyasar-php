@@ -1,19 +1,16 @@
 <?php
 
 use HamodaDev\Moyasar\Invoice\DTO\InvoiceDTO;
-use HamodaDev\Moyasar\Moyasar;
+use Tests\Config\MoyasarInitializer;
 
 beforeAll(fn() => validateEnvIsSet());
 
 it('retrieves invoice data', function () {
     // arrange
-    $moyasar = new Moyasar(
-        baseUrl: getenv('MOYASAR_BASE_URL'),
-        apiKey: getenv('MOYASAR_SECRET_KEY'),
-    );
+    $moyasar = MoyasarInitializer::getInstance()->getMoyasar();
 
     // act
-    $invoice = $moyasar->invoice()->get(getenv('MOYASAR_SAMPLE_INITIATED_INVOICE_ID'));
+    $invoice = $moyasar->invoice()->get(getenv('MOYASAR_SAMPLE_INITIATED_INVOICE_ID') ?: '91011');
 
     // assert
     expect($invoice)
@@ -23,10 +20,7 @@ it('retrieves invoice data', function () {
 
 it('lists invoices', function () {
     // arrange
-    $moyasar = new Moyasar(
-        baseUrl: getenv('MOYASAR_BASE_URL'),
-        apiKey: getenv('MOYASAR_SECRET_KEY'),
-    );
+    $moyasar = MoyasarInitializer::getInstance()->getMoyasar();
 
     // act
     $invoices = iterator_to_array($moyasar->invoice()->list()->paginate($moyasar)->items());

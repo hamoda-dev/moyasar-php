@@ -7,6 +7,7 @@
     <php>
         <env name="MOYASAR_SECRET_KEY" value="sk_test_xxxxxx" />
         <env name="MOYASAR_BASE_URL" value="https://api.moyasar.com/v1" />
+        <env name="REAL_TESTS" value="false" />
         <env name="MOYASAR_SAMPLE_INITIATED_INVOICE_ID" value="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
     </php>
     <testsuites>
