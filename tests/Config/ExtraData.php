@@ -1,6 +1,6 @@
 <?php
 
-namesapce Tests\Config;
+namespace Tests\Config;
 
 use Saloon\Http\Faking\MockClient;
 
