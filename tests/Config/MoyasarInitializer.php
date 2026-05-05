@@ -5,20 +5,6 @@ namespace Tests\Config;
 use HamodaDev\Moyasar\Moyasar;
 use Saloon\Http\Faking\MockClient;
 
-class ExtraData
-{
-    public function __construct(
-        private readonly MockClient $client
-    ) {
-    }
-
-    public function getClient(): MockClient
-    {
-        return $this->client;
-    }
-}
-
-
 class MoyasarInitializer
 {
     private static ?self $instance = null;
@@ -39,7 +25,7 @@ class MoyasarInitializer
 
         if ($isMock) {
             $moyasar = new Moyasar(
-                baseUrl: getenv('MOYASAR_BASE_URL'),
+                baseUrl: getenv('MOYASAR_BASE_URL') ?: "https://mock-api.moyasar.com/v1",
                 apiKey: "sk_test_AbCd",
             );
 
@@ -50,7 +36,7 @@ class MoyasarInitializer
             $moyasar->withMockClient($extra->getClient());
         } else {
             $moyasar = new Moyasar(
-                baseUrl: getenv('MOYASAR_BASE_URL') ?: "https://mock-api.moyasar.com/v1",
+                baseUrl: getenv('MOYASAR_BASE_URL'),
                 apiKey: getenv('MOYASAR_SECRET_KEY'),
             );
             $extra = null;
