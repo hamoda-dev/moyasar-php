@@ -2,16 +2,13 @@
 
 use HamodaDev\Moyasar\Invoice\DTO\CreateInvoiceDTO;
 use HamodaDev\Moyasar\Invoice\DTO\InvoiceDTO;
-use HamodaDev\Moyasar\Moyasar;
+use Tests\Config\MoyasarInitializer;
 
 beforeAll(fn() => validateEnvIsSet());
 
 it('cancels an invoice', function () {
     // arrange
-    $moyasar = new Moyasar(
-        baseUrl: getenv('MOYASAR_BASE_URL'),
-        apiKey: getenv('MOYASAR_SECRET_KEY'),
-    );
+    $moyasar = MoyasarInitializer::getInstance()->getMoyasar();
 
     $invoice = $moyasar->invoice()->create(CreateInvoiceDTO::fromArray(mockCreateInvoiceDTO()));
 
