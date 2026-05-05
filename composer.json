@@ -34,6 +34,19 @@
         }
     },
     "require-dev": {
-        "pestphp/pest": "^3"
+        "pestphp/pest": "^3",
+        "squizlabs/php_codesniffer": "^4.0",
+        "phpstan/phpstan": "^2.1"
+    },
+    "scripts": {
+        "test": "pest",
+        "cs-check": "phpcs",
+        "cs-fix": "phpcbf",
+        "stan": "phpstan analyse",
+        "check": [
+            "@cs-check",
+            "@stan",
+            "@test"
+        ]
     }
 }
