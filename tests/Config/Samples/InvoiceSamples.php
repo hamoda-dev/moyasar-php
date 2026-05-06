@@ -5,10 +5,10 @@ namespace Tests\Config\Samples;
 class InvoiceSamples
 {
     /** @var string */
-    public const MOCK_URL = "https://example.com";
+    public const string MOCK_URL = "https://example.com";
 
     /** @var array */
-    public const TEST_INVOICE = [
+    public const array TEST_INVOICE = [
         'id' => '1234',
         'status' => 'initiated',
         'amount' => 1000,
