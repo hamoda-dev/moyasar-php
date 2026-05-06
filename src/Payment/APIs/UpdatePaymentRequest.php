@@ -19,7 +19,8 @@ class UpdatePaymentRequest extends Request implements HasBody
     public function __construct(
         public readonly string $paymentId,
         public readonly UpdatePaymentDTO $updatePaymentDTO,
-    ) {}
+    ) {
+    }
 
     public function resolveEndpoint(): string
     {

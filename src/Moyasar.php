@@ -12,7 +12,8 @@ class Moyasar extends Connector
     public function __construct(
         protected readonly string $baseUrl,
         protected readonly string $apiKey,
-    ) {}
+    ) {
+    }
 
     public function resolveBaseUrl(): string
     {

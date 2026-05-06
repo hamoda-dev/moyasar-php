@@ -37,7 +37,8 @@ final readonly class PaymentDTO
         public array $metadata,
         public array $source,
         public ?string $givenId = null,
-    ) {}
+    ) {
+    }
 
     public static function fromResponse(Response $response): self
     {

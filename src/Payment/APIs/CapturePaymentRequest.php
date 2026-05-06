@@ -18,7 +18,8 @@ class CapturePaymentRequest extends Request implements HasBody
     public function __construct(
         public readonly string $paymentId,
         public readonly ?int $amount = null,
-    ) {}
+    ) {
+    }
 
     public function resolveEndpoint(): string
     {

@@ -8,7 +8,8 @@ class ExtraData
 {
     public function __construct(
         private readonly MockClient $client
-    ) {}
+    ) {
+    }
 
     public function getClient(): MockClient
     {

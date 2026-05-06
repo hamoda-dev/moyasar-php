@@ -16,7 +16,8 @@ final readonly class CreditCardSourceDTO
         public ?bool $manual = null,
         public ?bool $saveCard = null,
         public ?string $token = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array<string, mixed>

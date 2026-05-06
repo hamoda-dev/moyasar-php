@@ -6,7 +6,7 @@ class InvoiceSamples
 {
     /** @var string */
     public const MOCK_URL = "https://example.com";
-    
+
     /** @var array */
     public const TEST_INVOICE = [
         'id' => '1234',
@@ -20,7 +20,7 @@ class InvoiceSamples
             'order_id' => '1234'
         ],
     ];
-    
+
     /** @var array */
     public const array CANCELED_TEST_INVOICE = [
         'id' => '1234',
@@ -34,7 +34,7 @@ class InvoiceSamples
             'order_id' => '1234'
         ],
     ];
-    
+
     /** @var array */
     public const array TEST_INVOICE_2 = [
         'id' => '5678',
@@ -45,7 +45,7 @@ class InvoiceSamples
         'amount_format' => '10.00 SAR',
         'url' => self::MOCK_URL,
     ];
-    
+
     /** @var array */
     public const array TEST_INVOICE_3 = [
         'id' => '91011',

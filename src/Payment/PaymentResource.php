@@ -23,7 +23,7 @@ class PaymentResource extends BaseResource
 
     public function list(): ListPaymentsRequest
     {
-        return new ListPaymentsRequest;
+        return new ListPaymentsRequest();
     }
 
     public function create(CreatePaymentDTO $dto): PaymentDTO
