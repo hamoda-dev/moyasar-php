@@ -28,12 +28,8 @@ pest()->extend(Tests\TestCase::class)->in('Feature');
 |
 */
 
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
-});
-
 uses()
-    ->beforeEach(fn() => MockClient::destroyGlobal())
+    ->beforeEach(fn () => MockClient::destroyGlobal())
     ->in(__DIR__);
 
 function validateEnvIsSet()

@@ -13,7 +13,8 @@ class CancelInvoiceRequest extends Request
 
     public function __construct(
         public readonly string $invoiceId,
-    ) {}
+    ) {
+    }
 
     public function resolveEndpoint(): string
     {

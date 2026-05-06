@@ -29,8 +29,7 @@ class MoyasarInitializer
                 apiKey: "sk_test_AbCd",
             );
 
-            /** @var array<class-string, \Saloon\Http\Faking\MockResponse> */
-            $mockRouter = require_once "MockResponses.php";
+            $mockRouter = MockResponses::getAll();
 
             $extra = new ExtraData(new MockClient($mockRouter));
             $moyasar->withMockClient($extra->getClient());

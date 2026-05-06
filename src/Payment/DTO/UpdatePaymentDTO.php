@@ -10,5 +10,6 @@ final readonly class UpdatePaymentDTO
     public function __construct(
         public ?string $description = null,
         public ?array $metadata = null,
-    ) {}
+    ) {
+    }
 }

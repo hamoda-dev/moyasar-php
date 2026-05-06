@@ -13,7 +13,8 @@ class GetPaymentRequest extends Request
 
     public function __construct(
         public readonly string $paymentId,
-    ) {}
+    ) {
+    }
 
     public function resolveEndpoint(): string
     {

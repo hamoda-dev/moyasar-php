@@ -13,7 +13,8 @@ final readonly class CreateInvoiceDTO
         public ?string $backUrl = null,
         public ?string $expiredAt = null,
         public ?array $metadata = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

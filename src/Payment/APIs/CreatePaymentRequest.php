@@ -19,7 +19,8 @@ class CreatePaymentRequest extends Request implements HasBody
 
     public function __construct(
         public readonly CreatePaymentDTO $createPaymentDTO,
-    ) {}
+    ) {
+    }
 
     public function resolveEndpoint(): string
     {

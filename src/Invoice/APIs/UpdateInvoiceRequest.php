@@ -19,7 +19,8 @@ class UpdateInvoiceRequest extends Request implements HasBody
     public function __construct(
         public readonly string $invoiceId,
         public readonly UpdateInvoiceDTO $updateInvoiceDTO,
-    ) {}
+    ) {
+    }
 
     public function resolveEndpoint(): string
     {

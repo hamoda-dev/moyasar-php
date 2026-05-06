@@ -9,5 +9,6 @@ final readonly class UpdateInvoiceDTO
      */
     public function __construct(
         public array $metadata,
-    ) {}
+    ) {
+    }
 }

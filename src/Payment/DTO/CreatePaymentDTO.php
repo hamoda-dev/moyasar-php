@@ -19,7 +19,8 @@ final readonly class CreatePaymentDTO
         public ?string $callbackUrl = null,
         public ?array $metadata = null,
         public ?bool $applyCoupon = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @param  array<string, mixed>  $data
