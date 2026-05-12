@@ -101,3 +101,58 @@ function mockInvoiceDTO(array $overrides = []): array
         ...$overrides
     ];
 }
+
+function mockCreatePaymentDTO(array $overrides = []): array
+{
+    return [
+        'amount' => 10000,
+        'currency' => 'SAR',
+        'description' => 'Test payment',
+        'callback_url' => 'https://example.com/webhook',
+        'source' => [
+            'type' => 'creditcard',
+            'name' => 'John Doe',
+            'number' => '4111111111111111',
+            'month' => 12,
+            'year' => 2030,
+            'cvc' => 123,
+        ],
+        ...$overrides
+    ];
+}
+
+function mockPaymentDTO(array $overrides = []): array
+{
+    return [
+        'id' => 'pay_1',
+        'status' => 'paid',
+        'amount' => 10000,
+        'fee' => 50,
+        'currency' => 'SAR',
+        'refunded' => 0,
+        'refunded_at' => null,
+        'captured' => 10000,
+        'captured_at' => '2024-01-15T12:00:00Z',
+        'voided_at' => null,
+        'description' => 'Test payment',
+        'amount_format' => '100.00 SAR',
+        'fee_format' => '0.50 SAR',
+        'refunded_format' => '0.00 SAR',
+        'captured_format' => '100.00 SAR',
+        'invoice_id' => null,
+        'ip' => '127.0.0.1',
+        'callback_url' => null,
+        'created_at' => '2024-01-15T10:00:00Z',
+        'updated_at' => '2024-01-15T12:00:00Z',
+        'metadata' => [],
+        'source' => [
+            'type' => 'creditcard',
+            'company' => 'visa',
+            'name' => 'John Doe',
+            'number' => '**** **** **** 1111',
+            'message' => null,
+        ],
+        'given_id' => null,
+        ...$overrides
+    ];
+}

@@ -5,7 +5,7 @@ namespace HamodaDev\Moyasar\Payment\DTO;
 use Saloon\Http\Response;
 use Saloon\Traits\Responses\HasResponse;
 
-final readonly class PaymentDTO
+final class PaymentDTO
 {
     use HasResponse;
 
